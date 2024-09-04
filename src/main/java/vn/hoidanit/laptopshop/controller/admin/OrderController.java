@@ -1,8 +1,12 @@
 package vn.hoidanit.laptopshop.controller.admin;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.core.Ordered;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.web.util.matcher.OrRequestMatcher;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -28,9 +32,22 @@ public class OrderController {
     }
 
     @GetMapping("/admin/order")
-    public String getDashboard(Model model) {
-        List<Order> orders = this.orderService.fetchOrders();
-        model.addAttribute("orders", orders);
+    public String getOrderPage(Model model, @RequestParam("page") Optional<String> pageOptional) {
+        int page = 1;
+        try {
+            if (pageOptional.isPresent()) {
+                page = Integer.parseInt(pageOptional.get());
+            }
+        } catch (Exception e) {
+            // TODO: handle exception
+        }
+
+        Pageable pageable = PageRequest.of(page - 1, 2);
+        Page<Order> orders = this.orderService.fetchOrders(pageable);
+        List<Order> listOrders = orders.getContent();
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", orders.getTotalPages());
+        model.addAttribute("orders", listOrders);
         return "admin/order/show";
     }
 
